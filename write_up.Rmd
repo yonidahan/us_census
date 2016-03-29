@@ -10,7 +10,7 @@ output: html_document
 ***   
 
 This part aims to provide basic insights on the variables: their distributions, extreme and missing values and relations with the income class.   
-All the scripts needed to perform the following are in my [github repository](https://github.com/yonidahan/us_census).   
+The scripts needed to perform the following are in my [github repository](https://github.com/yonidahan/us_census).   
 
 
 ***
@@ -54,7 +54,7 @@ data.frame(
         )
 ```   
 One can note the **unbalanced** aspect of the income (only 6% of the people in the high-income class). Extreme values are observed in "capital_gains", "dividends_from_stocks and "weeks_worked_in_year". The large majority of people has neither capital gains nor dividends from stocks (96% and 98%). A left skewness is observed in "dividends_from_stocks" (90% earns no dividends).   
-Also, one can observe some conflicting aspects in the data: some people have a net capital income (dividends+capital gains - capital losses) greater than 50k$ and belong to the low-income class; and many capital_gains of $99,999 seems unreasonable.   
+Also, we can observe some conflicting aspects in the data (characteristic of administrative datasets): some people have a net capital income (dividends+capital gains - capital losses) greater than 50k$ and belong to the low-income class; and many capital_gains of $99,999 seems unreasonable.   
 The variables that appear the most related with the income class are "age" (high-income group people is older than low-income group), "class_of_worker" (high-income people turn out to be in either the private or the self-employed category), "education" (people who hold a degree tend to have high incomes), "marital_status" (being married leads to higher incomes),"major_industry_code" (banking and finance industries tend to have higher incomes), "major_occupation_code" (executives have higher incomes), "race" (a slight higher income is observed for white people) and sex (males tend to have higher incomes).   
 
 
@@ -137,16 +137,17 @@ In order to model the income variable, the following reasoning will be applied:
 - learn a subset of important variables using random forest    
 - compare two classification models with the latter subset (eliminate noise and redundancy): random forest and generalized boosted regression model.   
 
-In order to handle this unbalanced dataset, a rigorous model would use an oversampling technique such as Synthetic Minority Over-sampling Technique (NV Chawla - 2002), but it's of the scope of this evaluation.   
+In order to handle this unbalanced dataset, a rigorous model would use an oversampling technique such as Synthetic Minority Over-sampling Technique (NV Chawla - 2002), but it's out of the scope of this evaluation.   
 
 
 ***   
 
 
 ###Feature selection  
-Random forests can assess variable importance and out-of-bag error internally, it can be used to obtain a relevant feature subset. A similar but more precise way to obtain all relevant features would be to use the Boruta algorithm.
+Random forests can assess variable importance and out-of-bag error internally, it can be used to obtain a relevant feature subset.   
 
-```{r echo=TRUE,message=FALSE,fig.height=9} 
+
+```{r echo=TRUE,message=FALSE,fig.height=8,fig.width=8} 
 library(randomForest)
 load("./proc_files/data1")
 load("./proc_files/help_data1")
@@ -157,7 +158,8 @@ varImpPlot(rf1,main="Variable importance",type=2)
 
 ```   
 
-The most important features seem to be **"education"**, **"major_industry_code"**, **"age"**, **"major_industry_code"** (as pointed out in exploratory data analysis), **"dividends_from_stocks"** and **"capital_gains"**.   
+The most important features (shown by the Gini decrease in node purity) seem to be **"education"**, **"major_industry_code"**, **"age"**, **"major_industry_code"** (as pointed out in exploratory data analysis), **"dividends_from_stocks"** and **"capital_gains"**. A similar but unbiased way (the measure is biased towards categorical variables with lots of levels) to obtain all relevant features would be to use the Boruta algorithm.   
+
 
 
 ```{r echo=TRUE,warning=FALSE,message=FALSE}
@@ -195,7 +197,7 @@ The model performs better, as shown by the increases of recall and harmonic mean
 
 ###Generalized Boosting Regression Model   
 Following the same reasoning as before, a generalized boosting regression model has been tried on both whole set and subset of features. Due to caret package inefficiency on my machine, I wrote my own parallelized routine (gbm_grid) for finding the best parameters using a grid search with cross-validation.   
-The classifier using the subset of features performs better, but the recall and F1-score are lower than the ones obtained using random forest.   
+The classifier using the subset of features performs better, but the recall (0.23) and F1-score (0.29) are lower than the ones obtained using random forest with the feature subset.   
 
 ***   
 
@@ -227,7 +229,7 @@ paste("F1-score:",(2*p*r)/(p+r))
 The most difficult steps have been for me to understand the data set and its variables (everything was not clearly explicited in the metadata file) and to find a way of how to get a first quick-and-dirty model. Performing all these steps in some hours has been challenging but interesting.   
 
 
-As noted in the instructions, I spent several hours on the data set (not days). If I were to build a pure model, I would focus on these points:   
+As noted in the instructions, I spent several hours on the data set (not days). If I had to build a pure model, I would focus on these points:   
 
 - careful preprocessing and feature engineering   
 - try generating synthetic samples (using *Synthetic Minority Over-sampling Technique* for instance)   
@@ -236,4 +238,4 @@ As noted in the instructions, I spent several hours on the data set (not days). 
 - try other ensembling models such as extreme gradient boosting   
 - improve tuning parameters process   
 - try model ensembling with the best models obtained   
-- try other approaches, like **anomaly detection**   
+- try other perspectives, like **anomaly detection**   
